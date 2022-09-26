@@ -1,8 +1,8 @@
 # BossKiller
 Boss Killer is a simple 3D game.
 
-March 7th 2022
-Boss Killer 1.0.1 release
+September 26, 2022
+Boss Killer 1.1.0 release
 
 
 ___
