@@ -17,6 +17,7 @@ ___
 | `2` | Change to second weapon |
 | `3` | Change to third weapon |
 | `Mouse left` | Currently equipped gun shooting |
+| `Left Control` | You can run and do super jumps |
 
 
 Youtube Ch : https://www.youtube.com/channel/UC0lR1aYGgOhFioC3IsazUtw
