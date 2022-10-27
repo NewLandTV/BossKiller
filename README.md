@@ -18,7 +18,7 @@ ___
 | `3` | Change to third weapon |
 | `4` | Change to fourth weapon |
 | `Mouse left` | Currently equipped gun shooting |
-| `Mouse middle` |  |
+| `Mouse middle` | Toggles zoom in and out if the current gun is a sniper rifle. |
 | `Left Shift` | You can run and do super jumps |
 | `Left Control` | You can crouch or stand up |
 
