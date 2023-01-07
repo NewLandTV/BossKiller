@@ -1,17 +1,13 @@
 # BossKiller
 Boss Killer is a simple 3D game.
 
-December 2, 2022
-Boss Killer 1.4.0 release
+January 7, 2023
+Boss Killer 1.5.0 release
 
 **Release note**
 
-1. Objects have been added. (Wooden Cube).
-2. The title screen have been changed.
-3. In game, cooldown UI has been added in the shape of a circle.
-4. In game, changed boss and player health bars to gradient colors.
-5. In game, added day and sunset.
-6. In game, changed UI after player death.
+1. Add bullet hit particles.
+2. Changed some title screen UI.
 
 ___
 
