@@ -1,15 +1,19 @@
 # BossKiller
 Boss Killer is a simple 3D game.
 
-January 7, 2023
-Boss Killer 1.5.0 release
+July 9, 2023
+Boss Killer 1.6.0 release
 
-**Release note**
+## Release Note
 
-1. Add bullet hit particles.
-2. Changed some title screen UI.
+1. Changed some title screen UI.
+2. Changed the state of some guns.
+3. Added a baby boss.
+4. Added ability to increase total damage and boss health with score.
+5. Changed the player crouch movement speed.
+6. Changed the player's initial health amount.
 
-___
+# Keys Configuration
 
 | | **Manual** |
 |:---:|:---:|
@@ -26,6 +30,7 @@ ___
 | `Left Shift` | You can run and do super jumps |
 | `Left Control` | You can crouch or stand up |
 
+## Social
 
-Youtube Ch : https://www.youtube.com/channel/UC0lR1aYGgOhFioC3IsazUtw
-Naver Cafe : https://cafe.naver.com/2019newland
++ JkhTV Youtube : https://www.youtube.com/@NewLand2019-JkhTV
++ Naver Cafe : https://cafe.naver.com/2019newland
