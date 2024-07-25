@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -5,6 +6,13 @@ public class CrossHair : MonoBehaviour
 {
     [SerializeField]
     private Image crossHairImage;
+
+    [Serializable]
+    private class CrossHairElement
+    {
+        public Sprite sprite;
+        public Vector2 size;
+    }
 
     // 타입에 따른 요소
     [SerializeField]
@@ -21,12 +29,5 @@ public class CrossHair : MonoBehaviour
     {
         crossHairImage.sprite = elements[(int)type].sprite;
         crossHairImage.rectTransform.sizeDelta = elements[(int)type].size;
-    }
-
-    [System.Serializable]
-    private class CrossHairElement
-    {
-        public Sprite sprite;
-        public Vector2 size;
     }
 }

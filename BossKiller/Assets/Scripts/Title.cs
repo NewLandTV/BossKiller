@@ -13,7 +13,7 @@ public class Title : MonoBehaviour
         versionText.text = $"v{Application.version}";
     }
 
-    private void Start() => SoundManager.instance.PlayBGM("Quiet Time", true);
+    private void Start() => SoundManager.Instance.PlayBGM("Quiet Time", true);
 
     public void GameStart() => Loading.LoadScene(Scenes.Game);
 

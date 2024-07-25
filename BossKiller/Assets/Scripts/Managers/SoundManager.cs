@@ -1,89 +1,75 @@
+using System;
 using UnityEngine;
 
-public class SoundManager : MonoBehaviour
+public class SoundManager : Singleton<SoundManager>
 {
-    public static SoundManager instance;
-
-    // Sounds
     [SerializeField]
     private Sound[] bgmSounds;
     [SerializeField]
     private Sound[] sfxSounds;
 
-    // AudioSource
     [SerializeField]
     private AudioSource bgmPlayer;
     [SerializeField]
     private AudioSource[] sfxPlayers;
 
-    [System.Serializable]
+    [Serializable]
     private struct Sound
     {
         public string name;
         public AudioClip clip;
     }
 
-    private void Awake()
-    {
-        if (instance == null)
-        {
-            instance = this;
-
-            DontDestroyOnLoad(gameObject);
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
-    }
-
+    private void Awake() => Setup(this);
     #region BGM
-
     public void PlayBGM(string bgmName, bool loop)
     {
         for (int i = 0; i < bgmSounds.Length; i++)
         {
-            if (bgmSounds[i].name.Equals(bgmName))
+            if (!bgmSounds[i].name.Equals(bgmName))
             {
-                bgmPlayer.clip = bgmSounds[i].clip;
-                bgmPlayer.loop = loop;
-
-                bgmPlayer.Play();
-
-                return;
+                continue;
             }
+
+            bgmPlayer.clip = bgmSounds[i].clip;
+            bgmPlayer.loop = loop;
+
+            bgmPlayer.Play();
+
+            return;
         }
     }
 
     public void PauseBGM() => bgmPlayer.Pause();
 
     public void StopBGM() => bgmPlayer.Stop();
-
     #endregion
-
     #region SFX
-
     public void PlaySFX(string sfxName, bool loop)
     {
         for (int i = 0; i < sfxSounds.Length; i++)
         {
-            if (sfxSounds[i].name.Equals(sfxName))
+            if (!sfxSounds[i].name.Equals(sfxName))
             {
-                for (int j = 0; j < sfxPlayers.Length; j++)
+                continue;
+            }
+
+            for (int j = 0; j < sfxPlayers.Length; j++)
+            {
+                if (sfxPlayers[j].isPlaying)
                 {
-                    if (!sfxPlayers[j].isPlaying)
-                    {
-                        sfxPlayers[j].clip = sfxSounds[i].clip;
-                        sfxPlayers[j].loop = loop;
-
-                        sfxPlayers[j].Play();
-
-                        return;
-                    }
+                    continue;
                 }
+
+                sfxPlayers[j].clip = sfxSounds[i].clip;
+                sfxPlayers[j].loop = loop;
+
+                sfxPlayers[j].Play();
 
                 return;
             }
+
+            return;
         }
     }
 
@@ -102,6 +88,5 @@ public class SoundManager : MonoBehaviour
             sfxPlayers[i].Stop();
         }
     }
-
     #endregion
 }

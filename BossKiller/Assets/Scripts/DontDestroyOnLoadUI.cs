@@ -9,10 +9,8 @@ public enum ShowType
     Error
 }
 
-public class DontDestroyOnLoadUI : MonoBehaviour
+public class DontDestroyOnLoadUI : Singleton<DontDestroyOnLoadUI>
 {
-    public static DontDestroyOnLoadUI instance;
-
     [Header("Show Panel Group")]
     [SerializeField]
     private GameObject showPanelGroup;
@@ -27,49 +25,39 @@ public class DontDestroyOnLoadUI : MonoBehaviour
 
     private bool isOnPanel;
 
-    private void Awake()
-    {
-        if (instance == null)
-        {
-            instance = this;
-
-            DontDestroyOnLoad(gameObject);
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
-    }
+    private void Awake() => Setup(this);
 
     public void ShowPanel(ShowType showType, string title, string description, bool quit)
     {
-        if (!isOnPanel)
+        if (isOnPanel)
         {
-            isOnPanel = true;
-
-            showPanelTitletext.text = title;
-            showPanelDescriptiontext.text = description;
-
-            SetShowErrorOkButtonClickEvent(() =>
-            {
-                isOnPanel = false;
-
-                showPanelOkButton.onClick.RemoveAllListeners();
-
-                if (quit)
-                {
-                    Application.Quit();
-                }
-                else
-                {
-                    showPanelGroup.SetActive(false);
-                }
-            });
-
-            showPanelTitletext.color = showPanelTitleColors[(int)showType];
-
-            showPanelGroup.SetActive(true);
+            return;
         }
+
+        isOnPanel = true;
+
+        showPanelTitletext.text = title;
+        showPanelDescriptiontext.text = description;
+
+        SetShowErrorOkButtonClickEvent(() =>
+        {
+            isOnPanel = false;
+
+            showPanelOkButton.onClick.RemoveAllListeners();
+
+            if (quit)
+            {
+                Application.Quit();
+            }
+            else
+            {
+                showPanelGroup.SetActive(false);
+            }
+        });
+
+        showPanelTitletext.color = showPanelTitleColors[(int)showType];
+
+        showPanelGroup.SetActive(true);
     }
 
     public void SetShowErrorOkButtonClickEvent(UnityAction action)

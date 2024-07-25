@@ -25,7 +25,7 @@ public class ImageLoad : MonoBehaviour
 
         if (www.result != UnityWebRequest.Result.Success)
         {
-            DontDestroyOnLoadUI.instance.ShowPanel(ShowType.Error, "네트워크에 연결되지 않음", "현재 네트워크 상태를 확인해주세요.", false);
+            DontDestroyOnLoadUI.Instance.ShowPanel(ShowType.Error, "네트워크에 연결되지 않음", "현재 네트워크 상태를 확인해주세요.", false);
         }
 
         image.texture = ((DownloadHandlerTexture)www.downloadHandler).texture;

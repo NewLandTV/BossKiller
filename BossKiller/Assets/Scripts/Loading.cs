@@ -36,27 +36,27 @@ public class Loading : MonoBehaviour
 
         while (!asyncOperation.isDone)
         {
+            yield return null;
+
             if (asyncOperation.progress < 0.9f)
             {
                 progressBarImage.fillAmount = asyncOperation.progress;
+
+                continue;
             }
-            else
+
+            while (timer <= 1f)
             {
-                while (timer <= 1f)
-                {
-                    progressBarImage.fillAmount = Mathf.Lerp(0.9f, 1f, timer);
+                progressBarImage.fillAmount = Mathf.Lerp(0.9f, 1f, timer);
 
-                    timer += Time.unscaledDeltaTime;
+                timer += Time.unscaledDeltaTime;
 
-                    yield return null;
-                }
-
-                asyncOperation.allowSceneActivation = true;
-
-                yield break;
+                yield return null;
             }
 
-            yield return null;
+            asyncOperation.allowSceneActivation = true;
+
+            yield break;
         }
     }
 }

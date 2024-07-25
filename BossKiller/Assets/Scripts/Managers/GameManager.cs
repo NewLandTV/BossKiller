@@ -5,9 +5,7 @@ using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
-    [Header("Object Pooling")]
-
-    // 총알 오브젝트 풀링
+    [Header("Object Settings")]
     private List<Bullet> bullets = new List<Bullet>();
     private int cursor;
     [Range(1, 100000)]
@@ -30,8 +28,6 @@ public class GameManager : MonoBehaviour
     private Transform missileSpawnTransform;
 
     [Header("Player Status")]
-
-    // 플레이어의 현재 스텟 UI
     [SerializeField]
     private Text hpText;
     [SerializeField]
@@ -58,7 +54,6 @@ public class GameManager : MonoBehaviour
     public int score;
     
     [Header("World")]
-
     [SerializeField]
     private Player player;
     [SerializeField]
@@ -68,7 +63,7 @@ public class GameManager : MonoBehaviour
 
     private void Awake()
     {
-        SoundManager.instance.PlayBGM("Desert Adventure", true);
+        SoundManager.Instance.PlayBGM("Desert Adventure", true);
 
         deadScoreText = deadObjects[1].GetComponent<Text>();
         deadMaxScoreText = deadObjects[2].GetComponent<Text>();
@@ -85,31 +80,33 @@ public class GameManager : MonoBehaviour
         mainCamera = Camera.main;
     }
 
-    private IEnumerator Start()
+    private void LateUpdate()
+{
+        UpdatePlayerStatus();
+        UpdateMaxScoreText();
+    }
+
+    private void UpdatePlayerStatus()
     {
-        while (true)
+        hpText.text = string.Format("HP : {0:n0}", player.hp);
+        healthBarImage.fillAmount = (float)player.hp / player.maxHp;
+
+        healthBarImage.color = healthBarGradient.Evaluate((float)player.hp / player.maxHp);
+
+        scoreText.text = string.Format("Score : {0:n0}", score);
+        coolDownText.text = string.Format("Cool Down : {0:n2}s", player.guns[player.currentGunIndex].currentRate);
+        coolDownImage.fillAmount = player.guns[player.currentGunIndex].currentRate / player.guns[player.currentGunIndex].rate;
+
+        speedText.text = string.Format("Speed : {0:n3}", player.ApplySpeed);
+
+        deadScoreText.text = string.Format("Score : {0:n0}", score);
+    }
+    
+    private void UpdateMaxScoreText()
+    {
+        if (PlayerPrefs.HasKey("MaxScore"))
         {
-            // 플레이어 스텟 반연
-            hpText.text = string.Format("HP : {0:n0}", player.hp);
-            healthBarImage.fillAmount = (float)player.hp / player.maxHp;
-
-            healthBarImage.color = healthBarGradient.Evaluate((float)player.hp / player.maxHp);
-
-            scoreText.text = string.Format("Score : {0:n0}", score);
-            coolDownText.text = string.Format("Cool Down : {0:n2}s", player.guns[player.currentGunIndex].currentRate);
-            coolDownImage.fillAmount = player.guns[player.currentGunIndex].currentRate / player.guns[player.currentGunIndex].rate;
-
-            speedText.text = string.Format("Speed : {0:n3}", player.ApplySpeed);
-
-            deadScoreText.text = string.Format("Score : {0:n0}", score);
-
-            // 최고 기록 갱신
-            if (PlayerPrefs.HasKey("MaxScore"))
-            {
-                deadMaxScoreText.text = string.Format("Max Score : {0:n0}", PlayerPrefs.GetInt("MaxScore"));
-            }
-
-            yield return null;
+            deadMaxScoreText.text = string.Format("Max Score : {0:n0}", PlayerPrefs.GetInt("MaxScore"));
         }
     }
 
@@ -118,24 +115,25 @@ public class GameManager : MonoBehaviour
         if (CheckBulletEnable())
         {
             MakeBullet();
-        }
-        else
+
+            return;
+    }
+
+        if (!bullets[cursor].initialized)
         {
-            if (!bullets[cursor].initialized)
-            {
-                bullets[cursor].Initialize();
-            }
-
-            bullets[cursor].transform.position = player.transform.position + Vector3.up * 0.5f;
-            bullets[cursor].transform.rotation = Quaternion.Euler(new Vector3(mainCamera.transform.eulerAngles.x, player.transform.eulerAngles.y, 0f));
-            bullets[cursor].damage = p_dmg;
-            bullets[cursor].speed = p_spd;
-            bullets[cursor].Color = p_clr;
-
-            bullets[cursor].gameObject.SetActive(true);
-
-            cursor = (cursor + 1) % bullets.Count;
+            bullets[cursor].Initialize();
         }
+
+        Vector3 position = player.transform.position + Vector3.up * 0.5f;
+        Quaternion rotation = Quaternion.Euler(new Vector3(mainCamera.transform.eulerAngles.x, player.transform.eulerAngles.y, 0f));
+
+        bullets[cursor].transform.SetPositionAndRotation(position, rotation);
+
+        bullets[cursor].Set(p_spd, p_dmg, p_clr);
+
+        bullets[cursor].gameObject.SetActive(true);
+
+        cursor = (cursor + 1) % bullets.Count;
     }
 
     private Bullet MakeBullet()
@@ -169,17 +167,17 @@ public class GameManager : MonoBehaviour
         if (CheckMissileEnable())
         {
             MakeMissile();
-        }
-        else
-        {
-            missiles[cursor_Missile].transform.position = boss.transform.position;
-            missiles[cursor_Missile].transform.rotation = boss.transform.rotation;
-            missiles[cursor_Missile].damage = p_dmg;
 
-            missiles[cursor_Missile].gameObject.SetActive(true);
-
-            cursor_Missile = (cursor_Missile + 1) % missiles.Count;
+            return;
         }
+
+        missiles[cursor_Missile].transform.position = boss.transform.position;
+        missiles[cursor_Missile].transform.rotation = boss.transform.rotation;
+
+        missiles[cursor_Missile].SetDamage(p_dmg);
+        missiles[cursor_Missile].gameObject.SetActive(true);
+
+        cursor_Missile = (cursor_Missile + 1) % missiles.Count;
     }
 
     private Missile MakeMissile()
@@ -230,8 +228,7 @@ public class GameManager : MonoBehaviour
 
     public void Retry()
     {
-        SoundManager.instance.StopBGM();
-
+        SoundManager.Instance.StopBGM();
         Loading.LoadScene(Scenes.Title);
     }
 

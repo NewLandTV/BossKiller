@@ -3,8 +3,8 @@ using UnityEngine;
 
 public class Bullet : MonoBehaviour
 {
-    public float speed;
-    public int damage;
+    public float Speed { get; private set; }
+    public int Damage { get; private set; }
 
     public bool initialized;
 
@@ -13,44 +13,20 @@ public class Bullet : MonoBehaviour
 
     public Color Color
     {
-        get
-        {
-            return meshRenderer.material.color;
-        }
-        set
-        {
-            meshRenderer.material.color = value;
-        }
+        get => meshRenderer.material.color;
+        private set => meshRenderer.material.color = value;
     }
 
     // Wait For Seconds
     protected WaitForSeconds waitTime5f;
-    protected WaitForFixedUpdate waitTimeFixedUpdate;
 
-    private IEnumerator Start()
-    {
-        Initialize();
-        StartCoroutine(Disable());
+    private void Awake() => Initialize();
 
-        while (true)
-        {
-            Tick();
+    private void Start() => StartCoroutine(Disable());
 
-            yield return waitTimeFixedUpdate;
-        }
-    }
+    private void FixedUpdate() => Tick();
 
-    protected virtual void Tick() => rigid.AddForce(rigid.position + rigid.transform.forward * speed, ForceMode.Force);
-
-    protected virtual IEnumerator Disable()
-    {
-        yield return waitTime5f;
-
-        gameObject.SetActive(false);
-
-        transform.position = Vector3.zero;
-        transform.rotation = Quaternion.identity;
-    }
+    protected virtual void Tick() => rigid.AddForce(rigid.position + rigid.transform.forward * Speed, ForceMode.Force);
 
     public void Initialize()
     {
@@ -60,6 +36,22 @@ public class Bullet : MonoBehaviour
         rigid = GetComponent<Rigidbody>();
 
         waitTime5f = new WaitForSeconds(5f);
-        waitTimeFixedUpdate = new WaitForFixedUpdate();
+    }
+
+    public void Set(float speed, int damage, Color color)
+    {
+        Speed = speed;
+        Damage = damage;
+        Color = color;
+    }
+
+    public void SetDamage(int damage) => Damage = damage;
+
+    protected virtual IEnumerator Disable()
+    {
+        yield return waitTime5f;
+
+        gameObject.SetActive(false);
+        transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
     }
 }

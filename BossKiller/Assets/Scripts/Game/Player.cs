@@ -33,11 +33,9 @@ public class Player : MonoBehaviour
 
     private Camera mainCamera;
 
-    // 보스
     [SerializeField]
     private Boss boss;
 
-    // 크로스 헤어
     [SerializeField]
     private CrossHair crossHair;
 
@@ -56,104 +54,106 @@ public class Player : MonoBehaviour
         originVieldOfView = mainCamera.fieldOfView;
     }
 
-    private IEnumerator Start()
-    {
-        while (true)
+    private void Update()
+{
+        if (maxHp < hp)
         {
-            if (maxHp < hp)
-            {
-                hp = maxHp;
-            }
-
-            if (transform.position.y <= -2000f)
-            {
-                transform.position = Vector3.up * 15f;
-
-                hp -= 100;
-            }
-
-            if (!dead)
-            {
-                if (hp <= 0f)
-                {
-                    dead = true;
-
-                    mainCamera.fieldOfView = originVieldOfView;
-
-                    crossHair.SetType(CrossHair.Type.Basic);
-
-                    SoundManager.instance.StopBGM();
-                }
-
-                ZoomInFromGun();
-                ChangeGun();
-                UpdateRate();
-                Fire();
-                Jump();
-                Crouch();
-                Move();
-                PlayerRotate();
-                CameraRotate();
-            }
-            else
-            {
-                StartCoroutine(manager.Dead());
-            }
-
-            yield return null;
+            hp = maxHp;
         }
+
+        CheckPosition();
+
+        if (dead)
+        {
+            StartCoroutine(manager.Dead());
+
+            return;
+        }
+
+        CheckHP();
+        ZoomInFromGun();
+        ChangeGun();
+        UpdateRate();
+        Fire();
+        TryJump();
+        TryCrouch();
+        Move();
+        PlayerRotate();
+        CameraRotate();
+    }
+
+    private void CheckPosition()
+    {
+        if (transform.position.y <= -2000f)
+        {
+            transform.position = Vector3.up * 15f;
+            hp -= 100;
+        }
+    }
+
+    private void CheckHP()
+    {
+        if (hp > 0f)
+        {
+            return;
+        }
+
+        dead = true;
+
+        mainCamera.fieldOfView = originVieldOfView;
+
+        crossHair.SetType(CrossHair.Type.Basic);
+
+        SoundManager.Instance.StopBGM();
     }
 
     private void ZoomInFromGun()
     {
-        if (Input.GetMouseButtonDown(2) && guns[currentGunIndex].type == Gun.Type.SniperRifle)
+        bool canZoomIn = Input.GetMouseButtonDown(2) && guns[currentGunIndex].type == Gun.Type.SniperRifle;
+
+        if (!canZoomIn)
         {
-            toggleGunZoomIn = !toggleGunZoomIn;
-
-            if (toggleGunZoomIn)
-            {
-                mainCamera.fieldOfView = guns[currentGunIndex].zoomInFOV;
-
-                crossHair.SetType(CrossHair.Type.ZoomIn);
-
-                return;
-            }
-
-            mainCamera.fieldOfView = originVieldOfView;
-
-            crossHair.SetType(CrossHair.Type.Basic);
+            return;
         }
+
+        if (toggleGunZoomIn = !toggleGunZoomIn)
+        {
+            mainCamera.fieldOfView = guns[currentGunIndex].zoomInFOV;
+
+            crossHair.SetType(CrossHair.Type.ZoomIn);
+
+            return;
+        }
+
+        mainCamera.fieldOfView = originVieldOfView;
+
+        crossHair.SetType(CrossHair.Type.Basic);
     }
 
     private void ChangeGun()
     {
         int gunIndex = currentGunIndex;
 
-        if (Input.GetKeyDown(KeyCode.Alpha1))
+        for (int i = 0; i < 4; i++)
         {
-            currentGunIndex = 0;
-        }
-        else if (Input.GetKeyDown(KeyCode.Alpha2))
-        {
-            currentGunIndex = 1;
-        }
-        else if (Input.GetKeyDown(KeyCode.Alpha3))
-        {
-            currentGunIndex = 2;
-        }
-        else if (Input.GetKeyDown(KeyCode.Alpha4))
-        {
-            currentGunIndex = 3;
-        }
-
-        if (gunIndex != currentGunIndex)
-        {
-            if (toggleGunZoomIn)
+            if (Input.GetKeyDown(KeyCode.Alpha1 + i))
             {
-                mainCamera.fieldOfView = originVieldOfView;
+                currentGunIndex = i;
 
-                crossHair.SetType(CrossHair.Type.Basic);
+                break;
             }
+        }
+
+        if (gunIndex == currentGunIndex)
+        {
+            return;
+        }
+
+        if (toggleGunZoomIn)
+        {
+            mainCamera.fieldOfView = originVieldOfView;
+
+            crossHair.SetType(CrossHair.Type.Basic);
         }
     }
 
@@ -169,56 +169,64 @@ public class Player : MonoBehaviour
 
     private void Fire()
     {
-        if (Input.GetMouseButton(0) && guns[currentGunIndex].currentRate <= 0f)
+        bool canFire = Input.GetMouseButton(0) && guns[currentGunIndex].currentRate <= 0f;
+
+        if (!canFire)
         {
-            guns[currentGunIndex].currentRate = guns[currentGunIndex].rate;
-
-            if (guns[currentGunIndex].type != Gun.Type.SniperRifle)
-            {
-                manager.SpawnBullet(guns[currentGunIndex].damage * (manager.score + 1), guns[currentGunIndex].speed, guns[currentGunIndex].bulletColor);
-
-                return;
-            }
-
-            // Gun.Type is Sniper Rifle
-            if (Physics.Raycast(transform.position + Vector3.up * 0.5f, mainCamera.transform.forward, guns[currentGunIndex].speed, 11))
-            {
-                boss.OnDamage(guns[currentGunIndex].damage * (manager.score + 1));
-            }
-
-            cameraRotateX -= 70f;
+            return;
         }
+
+        guns[currentGunIndex].currentRate = guns[currentGunIndex].rate;
+
+        if (guns[currentGunIndex].type != Gun.Type.SniperRifle)
+        {
+            manager.SpawnBullet(guns[currentGunIndex].damage * (manager.score + 1), guns[currentGunIndex].speed, guns[currentGunIndex].bulletColor);
+
+            return;
+        }
+
+        // Gun.Type is Sniper Rifle
+        if (Physics.Raycast(transform.position + Vector3.up * 0.5f, mainCamera.transform.forward, guns[currentGunIndex].speed, 11))
+        {
+            boss.TakeDamage(guns[currentGunIndex].damage * (manager.score + 1));
+        }
+
+        cameraRotateX -= 70f;
     }
 
-    private void Jump()
+    private void TryJump()
     {
         applyJumpForce = Input.GetKey(KeyCode.LeftControl) ? superJumpForce : jumpForce;
 
-        if (Input.GetKeyDown(KeyCode.Space) && !isJump && !isCrouch && !toggleGunZoomIn)
-        {
-            isJump = true;
+        bool canJump = Input.GetKeyDown(KeyCode.Space) && !isJump && !isCrouch && !toggleGunZoomIn;
 
-            rigid.AddForce(Vector3.up * applyJumpForce, ForceMode.Impulse);
+        if (!canJump)
+        {
+            return;
         }
+
+        isJump = true;
+
+        rigid.AddForce(Vector3.up * applyJumpForce, ForceMode.Impulse);
     }
 
-    private void Crouch()
+    private void TryCrouch()
     {
-        if (Input.GetKeyDown(KeyCode.LeftShift) && !isJump)
+        if (isJump || !Input.GetKeyDown(KeyCode.LeftShift))
         {
-            if (isCrouch = !isCrouch)
-            {
-                applySpeed = crouchSpeed;
-
-                transform.localScale = Vector3.one;
-            }
-            else
-            {
-                applySpeed = walkSpeed;
-
-                transform.localScale = Vector3.one + Vector3.up;
-            }
+            return;
         }
+
+        if (isCrouch = !isCrouch)
+        {
+            applySpeed = crouchSpeed;
+            transform.localScale = Vector3.one;
+
+            return;
+        }
+
+        applySpeed = walkSpeed;
+        transform.localScale = Vector3.one + Vector3.up;
     }
 
     private void Move()
@@ -226,18 +234,19 @@ public class Player : MonoBehaviour
         float h = Input.GetAxisRaw("Horizontal");
         float v = Input.GetAxisRaw("Vertical");
 
+        Vector3 direction = ((transform.right * h) + (transform.forward * v)).normalized;
+
         if (!isCrouch && !toggleGunZoomIn)
         {
             applySpeed = Input.GetKey(KeyCode.LeftControl) ? runSpeed : walkSpeed;
         }
 
-        transform.position += ((transform.right * h) + (transform.forward * v)).normalized * applySpeed * Time.deltaTime;
+        transform.position += direction * applySpeed * Time.deltaTime;
     }
 
     private void PlayerRotate()
     {
         mouseX = Input.GetAxis("Mouse X");
-
         transform.eulerAngles += new Vector3(0f, mouseX * Sensitivity, 0f);
     }
 
@@ -246,7 +255,6 @@ public class Player : MonoBehaviour
         mouseY = Input.GetAxis("Mouse Y");
 
         cameraRotateX -= mouseY * Sensitivity;
-
         cameraRotateX = Mathf.Clamp(cameraRotateX, -85f, 85f);
 
         mainCamera.transform.eulerAngles = new Vector3(cameraRotateX, transform.eulerAngles.y, 0f);
@@ -268,11 +276,13 @@ public class Player : MonoBehaviour
 
     private void OnTriggerStay(Collider other)
     {
-        if (other.CompareTag("Missile"))
+        if (!other.CompareTag("Missile"))
         {
-            hp -= other.GetComponent<Missile>().damage * (manager.score + 1);
-
-            other.gameObject.SetActive(false);
+            return;
         }
+
+        hp -= other.GetComponent<Missile>().Damage * (manager.score + 1);
+
+        other.gameObject.SetActive(false);
     }
 }

@@ -75,68 +75,8 @@ public class Boss : MonoBehaviour
     {
         while (true)
         {
-            SetHealthBar();
-
-            if (transform.position.y < -2000f)
+            if (CheckDead())
             {
-                transform.position = Vector3.up * 10f;
-            }
-
-            if (!dead)
-            {
-                // Move and Rotate
-                transform.position += new Vector3(Random.Range(-1, 2), 0f, Random.Range(-1, 2)) * speed * Time.deltaTime;
-                transform.eulerAngles += Vector3.up * (missileSpawnDirectionRight ? 3.6f : -3.6f);
-
-                // Check health
-                if (hp <= 0f)
-                {
-                    dead = true;
-                    isChangeState = false;
-
-                    Destroy(Instantiate(deadEffectPrefab, transform.position, Quaternion.identity), 1f);
-                }
-
-                timer += Time.deltaTime;
-
-                // Spawn Missile
-                if (timer >= Random.Range(0.0025f, 0.025f))
-                {
-                    timer = 0f;
-
-                    manager.SpawnMissile(damage);
-                }
-
-                // Jump
-                if (!isJump && Random.Range(0, 4) == 2)
-                {
-                    isJump = true;
-
-                    float jumpForce = Random.Range(2.5f, 6.5f);
-
-                    rigid.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
-
-                    if (jumpForce >= 3.75f)
-                    {
-                        missileSpawnDirectionRight = !missileSpawnDirectionRight;
-
-                        StartCoroutine(ForceGround(new WaitForSeconds(jumpForce - 2.25f)));
-                    }
-                }
-
-                // Dash
-                if (isJump && Random.Range(0, 120) == 2)
-                {
-                    rigid.AddForce((player.transform.position - transform.position).normalized * dashPower, ForceMode.Impulse);
-                }
-            }
-            else
-            {
-                meshRenderer.material.color = Color.gray;
-                boxCollider.enabled = false;
-
-                rigid.AddForce(Vector3.up * 50f, ForceMode.Impulse);
-
                 yield return waitTime3f;
 
                 meshRenderer.enabled = false;
@@ -144,44 +84,166 @@ public class Boss : MonoBehaviour
                 yield return waitTime2f;
 
                 ResetBossState();
+
+                continue;
             }
+
+            CheckHP();
+
+            MoveAndRotate();
+            SpawnMissile();
+
+            TryJump();
+            TryDash();
 
             yield return null;
         }
     }
 
+    private void LateUpdate()
+    {
+        SetHealthBar();
+        CheckPosition();
+    }
+
+    private bool CheckDead()
+    {
+        if (!dead)
+        {
+            return false;
+        }
+
+        meshRenderer.material.color = Color.gray;
+        boxCollider.enabled = false;
+
+        rigid.AddForce(Vector3.up * 50f, ForceMode.Impulse);
+
+        return true;
+    }
+
+    private void CheckHP()
+    {
+        if (hp > 0f)
+        {
+            timer += Time.deltaTime;
+
+            return;
+        }
+
+        dead = true;
+        isChangeState = false;
+
+        GameObject deadEffect = Instantiate(deadEffectPrefab, transform.position, Quaternion.identity);
+
+        Destroy(deadEffect, 1f);
+    }
+
+    private void MoveAndRotate()
+    {
+        int x = Random.Range(-1, 2);
+        int z = Random.Range(-1, 2);
+
+        transform.position += new Vector3(x, 0f, z) * speed * Time.deltaTime;
+        transform.eulerAngles += Vector3.up * (missileSpawnDirectionRight ? 3.6f : -3.6f);
+    }
+
+    private void SpawnMissile()
+    {
+        float rate = Random.Range(0.0025f, 0.025f);
+
+        if (timer < rate)
+        {
+            return;
+        }
+
+        timer -= rate;
+
+        manager.SpawnMissile(damage);
+    }
+
+    private void TryJump()
+    {
+        if (isJump || Random.Range(0, 4) != 2)  // 25%
+        {
+            return;
+        }
+
+        isJump = true;
+
+        float jumpForce = Random.Range(2.5f, 6.5f);
+
+        rigid.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+
+        if (jumpForce < 3.75f)
+        {
+            return;
+        }
+
+        missileSpawnDirectionRight = !missileSpawnDirectionRight;
+
+        WaitForSeconds wait = new WaitForSeconds(jumpForce - 2.25f);
+
+        StartCoroutine(ForceGround(wait));
+    }
+
+    private void TryDash()
+    {
+        if (!isJump || Random.Range(0, 120) != 2)   // 0.833333%
+        {
+            return;
+        }
+
+        Vector3 direction = player.transform.position - transform.position;
+
+        rigid.AddForce(direction.normalized * dashPower, ForceMode.Impulse);
+    }
+
     private void ResetBossState()
     {
-        if (!isChangeState)
+        if (isChangeState)
         {
-            isChangeState = true;
-
-            count++;
-            manager.score += 50 * count;
-            nextHp += originHp * manager.score + 10;
-            nextDamage += originDamage * 2;
-            hp = nextHp;
-            damage = nextDamage;
-            meshRenderer.material = mat;
-            transform.position = Vector3.up * 4f;
-            transform.rotation = Quaternion.identity;
-            player.hp += count * manager.score;
-            meshRenderer.enabled = true;
-            boxCollider.enabled = true;
-
-            dead = false;
+            return;
         }
+
+        isChangeState = true;
+
+        manager.score += 50 * (++count);
+
+        nextHp += originHp * manager.score + 10;
+        nextDamage += originDamage * 2;
+
+        hp = nextHp;
+        damage = nextDamage;
+        meshRenderer.material = mat;
+
+        transform.SetPositionAndRotation(Vector3.up * 4f, Quaternion.identity);
+
+        player.hp += count * manager.score;
+
+        meshRenderer.enabled = true;
+        boxCollider.enabled = true;
+
+        dead = false;
     }
 
     private void SetHealthBar()
     {
-        float current = (float)hp / nextHp;
+        float curHP = (float)hp / nextHp;
 
-        worldSpaceUI.transform.LookAt(worldSpaceUI.transform.position + mainCameraTransform.forward);
+        Vector3 pos = worldSpaceUI.transform.position + mainCameraTransform.forward;
 
-        healthBar.fillAmount = current;
+        healthBar.fillAmount = curHP;
 
-        healthBar.color = healthBarGradient.Evaluate(current);
+        worldSpaceUI.transform.LookAt(pos);
+        healthBar.color = healthBarGradient.Evaluate(curHP);
+    }
+
+    private void CheckPosition()
+    {
+        if (transform.position.y <= -2000f)
+        {
+            transform.position = Vector3.up * 10f;
+        }
     }
 
     private IEnumerator ForceGround(WaitForSeconds waitTime)
@@ -191,22 +253,22 @@ public class Boss : MonoBehaviour
         rigid.AddForce(Vector3.down * 25f, ForceMode.Impulse);
     }
 
-    public void OnDamage(int damage)
-    {
-        hp -= damage;
-    }
+    public void TakeDamage(int damage) => hp -= damage;
 
     private void OnCollisionStay(Collision collision) => isJump = false;
 
     private void OnTriggerStay(Collider other)
     {
-        if (other.CompareTag("Bullet"))
+        if (!other.CompareTag("Bullet"))
         {
-            Destroy(Instantiate(hitParticlePrefab, transform.position, Quaternion.identity), 3f);
-
-            hp -= other.GetComponent<Bullet>().damage;
-
-            other.gameObject.SetActive(false);
+            return;
         }
+
+        GameObject hitParticle = Instantiate(hitParticlePrefab, transform.position, Quaternion.identity);
+
+        Destroy(hitParticle, 3f);
+        TakeDamage(other.GetComponent<Bullet>().Damage);
+
+        other.gameObject.SetActive(false);
     }
 }
