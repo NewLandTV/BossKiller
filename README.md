@@ -1,17 +1,14 @@
 # **Boss Killer**
 Boss Killer is a simple 3D game.
 
-July 9, 2023
-Boss Killer 1.6.0 release
+Oct 5, 2025
+Boss Killer 1.6.1 Release
 
 ## **Release Note**
 
-1. Changed some title screen UI.
-2. Changed the state of some guns.
-3. Added a baby boss.
-4. Added ability to increase total damage and boss health with score.
-5. Changed the player crouch movement speed.
-6. Changed the player's initial health amount.
+- Upgraded Unity project version to 6000.0.58f2. (⚠️Security patch)
+- Fix cafe URL. (image load)
+- Change company name to NewLand 2019 (NewLand -> NewLand 2019)
 
 # **Keys Configuration**
 
