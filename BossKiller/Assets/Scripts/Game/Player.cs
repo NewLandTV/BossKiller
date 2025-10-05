@@ -39,8 +39,8 @@ public class Player : MonoBehaviour
     [SerializeField]
     private CrossHair crossHair;
 
-    // 카메라 정보
-    private float originVieldOfView;
+    // FOV origin
+    private float originFieldOfView;
 
     private void Awake()
     {
@@ -51,7 +51,7 @@ public class Player : MonoBehaviour
 
         mainCamera = Camera.main;
 
-        originVieldOfView = mainCamera.fieldOfView;
+        originFieldOfView = mainCamera.fieldOfView;
     }
 
     private void Update()
@@ -100,7 +100,7 @@ public class Player : MonoBehaviour
 
         dead = true;
 
-        mainCamera.fieldOfView = originVieldOfView;
+        mainCamera.fieldOfView = originFieldOfView;
 
         crossHair.SetType(CrossHair.Type.Basic);
 
@@ -125,7 +125,7 @@ public class Player : MonoBehaviour
             return;
         }
 
-        mainCamera.fieldOfView = originVieldOfView;
+        mainCamera.fieldOfView = originFieldOfView;
 
         crossHair.SetType(CrossHair.Type.Basic);
     }
@@ -151,7 +151,7 @@ public class Player : MonoBehaviour
 
         if (toggleGunZoomIn)
         {
-            mainCamera.fieldOfView = originVieldOfView;
+            mainCamera.fieldOfView = originFieldOfView;
 
             crossHair.SetType(CrossHair.Type.Basic);
         }
@@ -262,7 +262,7 @@ public class Player : MonoBehaviour
 
     private void OnCollisionStay(Collision collision)
     {
-        if (collision.collider.CompareTag("Floor") && rigid.velocity.y <= 0f)
+        if (collision.collider.CompareTag("Floor") && rigid.linearVelocity.y <= 0f)
         {
             isJump = false;
         }
